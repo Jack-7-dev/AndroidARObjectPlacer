@@ -1,0 +1,22 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:VisualElement style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Samples/XR%20Interaction%20Toolkit/3.0.4/AR%20Starter%20Assets/ARDemoSceneAssets/Sprites/Button%20-%20Rounded%20Radius%20-%204px.png?fileID=2800000&amp;guid=df3b17ab68da00343a77bebb0c295407&amp;type=3#Button - Rounded Radius - 4px&quot;); -unity-background-image-tint-color: rgba(0, 0, 0, 0.78);">
+        <ui:Button text="X" parse-escape-sequences="true" display-tooltip-when-elided="true" name="X" style="width: 40px; height: 40px; position: relative; top: 10px; left: 543px; color: rgb(255, 255, 255); background-color: rgb(255, 95, 95); -unity-slice-left: 0; -unity-slice-top: 0; -unity-slice-right: 0; -unity-slice-bottom: 0; border-top-left-radius: 20px; border-top-right-radius: 20px; border-bottom-right-radius: 20px; border-bottom-left-radius: 20px; font-size: 24px;" />
+        <ui:Label tabindex="-1" text="Upload Custom Image" parse-escape-sequences="true" display-tooltip-when-elided="true" style="font-size: 24px; -unity-text-align: upper-center; margin-top: 20px; color: rgb(255, 255, 255);" />
+        <ui:Label tabindex="-1" text="Image Preview" parse-escape-sequences="true" display-tooltip-when-elided="true" style="color: rgb(255, 255, 255); -unity-text-align: upper-center;" />
+        <ui:VisualElement name="preview-container" style="flex-grow: 1; position: relative; justify-content: flex-start; align-items: center; align-self: center; border-top-width: 2px; border-right-width: 2px; border-bottom-width: 2px; border-left-width: 2px; border-left-color: rgba(255, 255, 255, 0); border-right-color: rgba(255, 255, 255, 0); border-top-color: rgba(255, 255, 255, 0); border-bottom-color: rgba(255, 255, 255, 0); padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; border-top-left-radius: 2px; border-top-right-radius: 2px; border-bottom-right-radius: 2px; border-bottom-left-radius: 2px;" />
+        <ui:Button text="Select Image from Gallery" parse-escape-sequences="true" display-tooltip-when-elided="true" name="SelectButton" style="background-color: rgb(0, 89, 238); color: rgb(255, 255, 255); align-items: center; align-self: center; margin-bottom: 10px; margin-top: 10px;" />
+        <ui:VisualElement style="flex-grow: 1; flex-direction: row; justify-content: space-around;">
+            <ui:TextField picking-mode="Ignore" label="Width" value="10" password="false" style="width: auto; background-color: rgba(255, 255, 255, 0); color: rgb(140, 140, 140); margin-top: 10px; margin-left: 2px; margin-bottom: 10px; -unity-text-align: middle-center;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: row; margin-top: 10px; margin-right: 4px; margin-bottom: 10px; margin-left: 2px; justify-content: space-around;">
+            <ui:TextField picking-mode="Ignore" label="Height" value="10" password="false" style="width: auto; color: rgb(144, 144, 144); -unity-text-align: middle-center;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: row; margin-top: 10px; margin-right: 4px; margin-bottom: 10px; margin-left: 2px; justify-content: space-around;">
+            <ui:TextField picking-mode="Ignore" label="Depth" value="10" password="false" style="width: auto; color: rgb(164, 164, 164); -unity-text-align: middle-center;" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 1; flex-direction: row; justify-content: space-between; align-items: center; align-self: center;">
+            <ui:Button text="Cancel" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Cancel" />
+            <ui:Button text="Create" parse-escape-sequences="true" display-tooltip-when-elided="true" name="Create" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
