@@ -12,6 +12,7 @@ public class CustomImageUploader : MonoBehaviour
 {
     [SerializeField] private GameObject uiObject; // Reference to CreateObjectUI GameObject
     [SerializeField] private Material customImageMaterial;
+    [SerializeField] private HybridButtonHandler hybridButtonHandler; // Reference to our hybrid button handler
 
     private VisualElement root;
     private Button selectImageButton;
@@ -31,7 +32,30 @@ public class CustomImageUploader : MonoBehaviour
     private void Awake()
     {
         arRaycastManager = FindObjectOfType<ARRaycastManager>();
+        Debug.Log("CustomImageUploader Awake called");
+        
+        // Find the hybrid button handler if not already assigned
+        if (hybridButtonHandler == null)
+        {
+            hybridButtonHandler = FindObjectOfType<HybridButtonHandler>();
+            if (hybridButtonHandler == null)
+            {
+                Debug.LogWarning("HybridButtonHandler not found. Button clicks may not work.");
+            }
+        }
+        
+        // Keep the UI hidden at start
+        if (uiObject != null)
+        {
+            uiObject.SetActive(false);
+        }
+    }
 
+    // Set up the UI Toolkit elements
+    public void SetupUI()
+    {
+        Debug.Log("SetupUI method running");
+        
         if (uiObject == null)
         {
             Debug.LogError("UI Object not assigned!");
@@ -45,48 +69,82 @@ public class CustomImageUploader : MonoBehaviour
             return;
         }
 
+        // Save active state
+        bool wasActive = uiObject.activeSelf;
+        
+        // Temporarily activate UI for setup if needed
+        if (!wasActive)
+        {
+            uiObject.SetActive(true);
+        }
+
+        // Get the root element
         root = uiDoc.rootVisualElement;
         if (root == null)
         {
-            Debug.LogError("Root VisualElement is null! Check if the UIDocument has a valid VisualTreeAsset assigned.");
+            Debug.LogError("Root VisualElement is null!");
+            
+            // Restore state
+            if (!wasActive)
+            {
+                uiObject.SetActive(false);
+            }
             return;
         }
 
-Debug.Log("Root VisualElement successfully retrieved.");
+        Debug.Log("Root VisualElement retrieved successfully.");
 
-        selectImageButton = root.Q<Button>("SelectButton") ?? 
-                           root.Query<Button>().Where(b => b.text == "Select Image from Gallery").First();
-
-        if (selectImageButton == null)
-        {
-            Debug.LogError("Select Image button not found in the UI!");
-            return;
-        }                   
-        createButton = root.Q<Button>("Create") ?? 
-                      root.Query<Button>().Where(b => b.text == "Create").First();
-        cancelButton = root.Q<Button>("Cancel") ?? 
-                      root.Query<Button>().Where(b => b.text == "Cancel").First();
-        closeButton = root.Q<Button>("X") ?? 
-                     root.Query<Button>().Where(b => b.text == "X").First();
-
+        // Find UI elements
+        selectImageButton = root.Q<Button>("SelectButton");
+        createButton = root.Q<Button>("Create");
+        cancelButton = root.Q<Button>("Cancel");
+        closeButton = root.Q<Button>("X");
         previewContainer = root.Q<VisualElement>("preview-container");
-
-        widthField = root.Query<TextField>().Where(t => t.label == "Width").First();
-        heightField = root.Query<TextField>().Where(t => t.label == "Height").First();
-        depthField = root.Query<TextField>().Where(t => t.label == "Depth").First();
-
-        if (selectImageButton != null) selectImageButton.clicked += OnSelectImageClicked;
-        if (createButton != null) 
+        
+        // Find TextFields
+        var textFields = root.Query<TextField>().ToList();
+        foreach (var textField in textFields)
         {
-            createButton.clicked += OnCreateClicked;
-            Debug.Log("Create button clicked.");
+            if (textField.label == "Width") widthField = textField;
+            else if (textField.label == "Height") heightField = textField;
+            else if (textField.label == "Depth") depthField = textField;
         }
-        if (cancelButton != null) cancelButton.clicked += OnCancelClicked;
-        if (closeButton != null) closeButton.clicked += OnCancelClicked;
 
-        // Start hidden
-        uiObject.SetActive(false);
+        Debug.Log($"Buttons found - Select: {selectImageButton != null}, Create: {createButton != null}, Cancel: {cancelButton != null}, Close: {closeButton != null}");
+        Debug.Log($"Fields found - Width: {widthField != null}, Height: {heightField != null}, Depth: {depthField != null}");
 
+        // We'll still try to register UI Toolkit handlers
+        // But they're just a backup - we'll use the hybrid buttons for actual input
+        if (selectImageButton != null)
+        {
+            selectImageButton.clickable = new Clickable(OnSelectImageClicked);
+            Debug.Log("Select Image button handler registered");
+        }
+        
+        if (createButton != null)
+        {
+            createButton.clickable = new Clickable(OnCreateClicked);
+            Debug.Log("Create button handler registered");
+        }
+        
+        if (cancelButton != null)
+        {
+            cancelButton.clickable = new Clickable(OnCancelClicked);
+            Debug.Log("Cancel button handler registered");
+        }
+        
+        if (closeButton != null)
+        {
+            closeButton.clickable = new Clickable(OnCancelClicked);
+            Debug.Log("Close button handler registered");
+        }
+        
+        // Restore UI state if we temporarily activated it
+        if (!wasActive)
+        {
+            uiObject.SetActive(false);
+        }
+        
         if (customImageMaterial == null)
         {
             customImageMaterial = new Material(Shader.Find("Standard"));
@@ -96,11 +154,41 @@ Debug.Log("Root VisualElement successfully retrieved.");
 
     public void ShowUploader()
     {
+        // Set up the UI before showing
+        SetupUI();
+        
+        // Show the UI
         uiObject.SetActive(true);
+        Debug.Log("UI activated - ShowUploader called");
+        
+        // Set up the hybrid button overlays
+        if (hybridButtonHandler != null)
+        {
+            // Small delay to make sure the UI is laid out
+            StartCoroutine(SetupHybridButtonsDelayed());
+        }
+    }
+    
+    private IEnumerator SetupHybridButtonsDelayed()
+    {
+        // Wait one frame for the UI to be fully laid out
+        yield return null;
+        
+        if (hybridButtonHandler != null)
+        {
+            hybridButtonHandler.SetupButtons();
+        }
     }
 
+    // Public method for the hybrid button handler to call
+    public void OnSelectImageClickedPublic()
+    {
+        OnSelectImageClicked();
+    }
+    
     private void OnSelectImageClicked()
     {
+        Debug.Log("OnSelectImageClicked method running");
         StartCoroutine(GetImageFromGallery());
     }
 
@@ -118,6 +206,7 @@ Debug.Log("Root VisualElement successfully retrieved.");
             if (!string.IsNullOrEmpty(path))
             {
                 pendingImagePath = path;
+                Debug.Log("Image selected: " + path);
             }
             else
             {
@@ -127,11 +216,13 @@ Debug.Log("Root VisualElement successfully retrieved.");
 
         yield return null;
     }
+    
     private void HandlePendingImageLoad()
     {
         if (string.IsNullOrEmpty(pendingImagePath))
             return;
 
+        Debug.Log("Loading image from: " + pendingImagePath);
         Texture2D texture = NativeGallery.LoadImageAtPath(pendingImagePath, maxSize: 1024);
         if (texture == null)
         {
@@ -141,6 +232,7 @@ Debug.Log("Root VisualElement successfully retrieved.");
         {
             selectedImage = texture;
             DisplayImagePreview(texture);
+            Debug.Log("Image loaded successfully");
         }
 
         pendingImagePath = null; // Reset
@@ -170,26 +262,47 @@ Debug.Log("Root VisualElement successfully retrieved.");
 
         previewContainer.Clear();
         previewContainer.Add(imageElement);
+        Debug.Log("Image preview displayed");
+    }
+
+    // Public method for the hybrid button handler to call
+    public void ForceCreateObject()
+    {
+        OnCreateClicked();
     }
 
     private void OnCreateClicked()
     {
+        Debug.Log("OnCreateClicked method running");
+        
         if (selectedImage == null)
         {
             Debug.LogWarning("No image selected");
             return;
         }
 
-        if (!float.TryParse(widthField.value, out float width) ||
-            !float.TryParse(heightField.value, out float height) ||
-            !float.TryParse(depthField.value, out float depth))
+        float width = 10f;
+        float height = 10f;
+        float depth = 10f;
+
+        if (widthField != null && !string.IsNullOrEmpty(widthField.value))
         {
-            Debug.LogWarning("Invalid dimensions");
-            return;
+            float.TryParse(widthField.value, out width);
         }
 
+        if (heightField != null && !string.IsNullOrEmpty(heightField.value))
+        {
+            float.TryParse(heightField.value, out height);
+        }
+
+        if (depthField != null && !string.IsNullOrEmpty(depthField.value))
+        {
+            float.TryParse(depthField.value, out depth);
+        }
+
+        Debug.Log($"Creating custom object with dimensions: {width}x{height}x{depth}");
         CreateCustomObject(width, height, depth);
-        uiObject.SetActive(false);
+        CloseUI();
     }
 
     private void CreateCustomObject(float width, float height, float depth)
@@ -207,6 +320,8 @@ Debug.Log("Root VisualElement successfully retrieved.");
         RegisterWithARSystem(cube);
         customObjectPrefab = cube;
         cube.SetActive(false);
+        
+        Debug.Log("Custom object created and registered with AR system");
     }
 
     private void RegisterWithARSystem(GameObject objectPrefab)
@@ -223,13 +338,31 @@ Debug.Log("Root VisualElement successfully retrieved.");
         }
     }
 
+    // Public method for the hybrid button handler to call
+    public void OnCancelClickedPublic()
+    {
+        OnCancelClicked();
+    }
+    
     private void OnCancelClicked()
     {
-        Debug.Log("Cancel button clicked. Resetting UI and clearing selected image.");
+        Debug.Log("OnCancelClicked method running");
+        CloseUI();
+    }
+    
+    private void CloseUI()
+    {
         selectedImage = null;
         previewContainer?.Clear();
         uiObject.SetActive(false);
+        
+        // Hide the hybrid buttons too
+        if (hybridButtonHandler != null)
+        {
+            hybridButtonHandler.HideButtons();
+        }
     }
+    
     private void Update()
     {
         HandlePendingImageLoad();
